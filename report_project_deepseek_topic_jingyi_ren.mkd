@@ -1,0 +1,148 @@
+**Analysis of DeepSeek-Related News Coverage**
+
+### **1. Background**
+
+DeepSeek is an emerging AI model serie that has recently gained significant attention. As a student specializing in AI&data, I recognize that it's quite related to our filed because it brings business effects too, since the introduction of DeepSeek-R1 has also sparked discussions about the relationship between model training costs and economic implications. So in order to understand how Deepseek is prescribed in English language media, I collected and analyzed news coverage spending approximately 20 days starting from the release of the DeepSeek R1 model.
+
+
+
+To achieve this, I experimented with several web scraping methods. Due to API limitations and restrictions, I opopted to use `pygooglenews` to gather related URLs from Google News, as well as the titles and publication dates. 
+
+However, I encountered multiple redirects in these links, requiring a manual approach to obtain the actual URLs. After filtering and verification, I compiled a dataset of **837 valid articles** for this analysis. You can see the details in the second part, and more details in the notebooks.
+
+------
+
+
+
+### **2. Data Collection and Preprocessing**
+
+The  data collection process involved:
+
+- Extracting Google News data using `pygooglenews`.
+- Manually retrieving redirected URLs and storing them in structured files.
+- Filtering duplicate links and verifying content validity.
+
+Once the dataset was prepared, I conducted **text preprocessing** using `SpaCy`, instead of `nltk`, as I found its lemmatization capabilities more effective, but nltk's lemmatization's kind of "bizarre". Our preprocessing steps included:
+
+- Lowercasing all text at the beginning
+- Removing HTML tags and URLs to clean up the content.
+- **Lemmatization (<u>I chose the lemmas instead of stemming to ensuring better interpretability</u>).
+- **Stopword removal**, using both the default `spaCy` stopword list and an extended stopword set from GitHub.
+  - I firstly only used the default sw list, but it turns out that there are still many low information words in the results whether it's about the frequency or the Wordcloud, so I searched on GitHub and download a more exhaustive English stopwords list.
+- **Filtering non-alphabetic tokens**, as numerical data, while relevant in financial news, lacked sufficient context for meaningful NLP analysis.
+
+All data processing was performed and organized on **pandas DataFrames**. The final data frame before the analysis looks like this : 
+
+
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208205717153.png" alt="image-20250208205717153" style="zoom: 50%;" />
+
+
+
+
+
+### **3. Statistical and NLP Analysis**
+
+
+
+#### **Global Word Frequency Analysis**
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208205758404.png" alt="image-20250208205758404" style="zoom:50%;" />
+
+In order to gain insights into word usage, we:
+
+- Used `Counter` to compute overall word frequencies across all articles.
+- Visualized the top 40 most frequent words through bar plots.
+
+
+
+#### **Word frequency via TF-IDF Keyword Extraction for each article**
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208210201005.png" alt="image-20250208210201005" style="zoom:50%;" />
+
+To extract more meaningful and distinctive keywords, I applied **TF-IDF ** :
+
+- Computed the **top 5** keywords for each article.
+- Aggregated these keywords to identify the most distinctive words across the dataset.
+- Compared results with the first global word frequency analysis and observed notable differences with meaningful words like "ban", .
+
+
+
+#### **Time-Series Analysis of Keywords**
+
+I also did a examinition keyword frequency over time to detect potential trends. Although **no clear trends** emerged for individual words, I observed a **gradual increase in overall keyword occurrences**, indicating a growing volume of news coverage on *DeepSeek* over time.
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208210703697.png" alt="image-20250208210703697" style="zoom:50%;" />
+
+#### **Word Cloud Visualization** ☁️
+
+What I did about Word Cloud : 
+
+- A **classic word cloud** based on global word frequency distribution.
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208210804635.png" alt="image-20250208210804635" style="zoom:50%;" />
+
+
+
+
+
+- A **custom DeepSeek-themed word cloud** ✨ which sacrificed some readability...
+
+<img src="../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208210845609.png" alt="image-20250208210845609" style="zoom:50%;" />
+
+
+
+
+
+
+
+------
+
+### **4. Topic Modeling with LDA**
+
+Given the volume of news articles, I think it would be interesting if we go beyond the word frequency studies and extract underlying themes using LDA.
+
+**The challenges & refinements **
+
+- I initially tried the default LDA modeling, which resulted in **high-frequency words appearing across multiple topics**.
+- To address this, I **filtered extreme frequency words** using **Gensim’s `filter_extremes()` function**.
+- I experimented with different numbers of topics (from 3 to 5) and chosed 5.
+
+
+
+
+
+Using LDA, I identified five key themes in DeepSeek-related news coverage:
+
+![image-20250208211651534](../../../../Library/Mobile Documents/iCloud~md~obsidian/Documents/学习笔记/总附件/image-20250208211651534.png)
+
+
+
+
+
+To further interpret these topics, I utilized ChatGPT to label the topic groups, then I gave my interpretation based on my personal knowledge about this topic :
+
+
+
+1. **Regulatory and Geopolitical Challenges** (Given by GPT)
+
+   > Topics on AI regulation, security risks, and international policies. This theme includes terms like "ban," "Taiwan," "government," and "security," reflecting concerns over DeepSeek's compliance and restrictions in certain regions (e.g., Italy banning the model).
+
+2. **Technological Advancements and Cloud Integration** (Given by GPT)
+
+   > Topics on cloud-based AI development and infrastructure, featuring words such as "cloud," "LLM," and "source."
+
+3. **Market Impact and Competitive Landscape** (Given by GPT)
+
+   > Economic implications, investments, and DeepSeek’s position in the industry. Keywords such as "Nvidia," "stock," "market," and "chip" highlight its influence on the AI ecosystem and competitors like OpenAI.
+
+4. **AI Infrastructure and Energy Consumption**  (Given by GPT)
+
+   > Concerns about the cost, scalability, and resource demands of AI models. Keywords such as "GPU," "power," and "industry" suggest discussions on computational efficiency and energy consumption.
+
+5. **Security, Privacy, and Ethical Considerations** (Given by GPT)
+
+   >  AI-related risks, privacy debates, and governmental oversight. Words like "credit," "security," "government," "platform," and "account" reflect concerns about data security and the potential risks of interacting with AI models online.
+
+
+
